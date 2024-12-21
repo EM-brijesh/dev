@@ -1,5 +1,6 @@
-import React from "react";
-import { Calendar, MapPin, Users, Loader2 } from 'lucide-react';
+//import React, { ReactNode } from "react";
+import { Calendar, MapPin, Users } from 'lucide-react';
+import { motion } from "framer-motion";
 
 interface CardProps {
   title: string;
@@ -11,7 +12,12 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ title, desc, time, location, count }) => {
   return (
-    <div className="flex items-center justify-center h-72 w-54 bg-blue-800 rounded-2xl shadow-lg">
+    <motion.div
+      className="flex items-center justify-center h-72 w-54 bg-blue-800 rounded-2xl shadow-lg"
+      initial={{ x: -4 }}
+      animate={{ x: 4, y: [-4, 4, -4] }}
+      transition={{ duration: 1, yoyo: Infinity, ease: "linear" }}
+    >
       <div className="p-4">
         <h2 className="text-xl font-bold mb-2 text-white">{title}</h2>
         <p className="text-gray-400 mb-6">{desc}</p>
@@ -31,7 +37,7 @@ const Card: React.FC<CardProps> = ({ title, desc, time, location, count }) => {
           Join Event
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
