@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,35 +8,33 @@ datasource db {
 }
 
 model Event {
-  id          Int      @default(autoincrement()) @id
-  title       String
-  description String   @default("") // Default empty string for existing rows
-  location    String
-  time        DateTime @default(now()) // Default to current timestamp for existing rows
-  // latitude    Decimal? @db.Decimal(10, 7) // Add latitude (nullable at first) as this will require paid versons (mapbox)
-  // longitude   Decimal? @db.Decimal(10, 7) // Add longitude (nullable at first)
-  capacity    Int      @default(0) // Default capacity to 0 for existing rows
-  creator     User     @relation(fields: [creatorId], references: [id])
-  creatorId   Int
+  id           Int           @id @default(autoincrement())
+  title        String
+  location     String
+  creatorId    Int
+  capacity     Int           @default(0)
+  createdAt    DateTime      @default(now())
+  description  String        @default("")
+  time         DateTime      @default(now())
+  creator      User          @relation(fields: [creatorId], references: [id])
   participants Participant[]
-  createdAt   DateTime @default(now())
 }
 
 model User {
-  id         Int      @default(autoincrement()) @id
-  username   String    @unique // Default name for existing rows
-  password   String    @default("")
-  email      String   @unique
-  events     Event[]
-  location   String    @default("")
+  id           Int           @id @default(autoincrement())
+  //email        String        @unique
+  password     String        @default("")
+  username     String        @unique
+  location     String        @default("")
+  events       Event[]
   participants Participant[]
 }
 
 model Participant {
-  id         Int      @default(autoincrement()) @id
-  event      Event    @relation(fields: [eventId], references: [id])
-  eventId    Int      // ID of the event the user joined
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int      // ID of the user who joined the event
-  joinedAt   DateTime @default(now()) // Timestamp when the user joined the event
+  id       Int      @id @default(autoincrement())
+  eventId  Int
+  userId   Int
+  joinedAt DateTime @default(now())
+  event    Event    @relation(fields: [eventId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 }
