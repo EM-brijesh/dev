@@ -1,12 +1,14 @@
-
 import { Lock, User } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
- export const Auth = () => {
+export const Auth = () => {
   const [formdata, setFormdata] = useState({
     username: '',
     password: '',
   });
+
+  const navigate = useNavigate(); // Correct initialization of navigate
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -16,9 +18,47 @@ import { useState } from 'react';
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form Submitted:" ,formdata);
+    console.log("Form Submitted:", formdata);
+
+    try {
+      const response = await fetch("http://localhost:3000/signin", {
+        method: "POST", // Request method
+        headers: {
+          "Content-Type": "application/json", // Sending data as JSON
+        },
+        body: JSON.stringify(formdata), // Convert form data to JSON string
+      });
+
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error("Error: " + response.statusText);
+      }
+
+      // Handle the response from the API
+      const data = await response.json();
+      console.log("Response from API:", data);
+
+      // Assuming the response contains a JWT token
+      const token = data.token; // This will depend on your backend response format
+
+      // Store the token in localStorage or sessionStorage
+      localStorage.setItem('authToken', token); // Store JWT in localStorage
+
+      // Optionally, you can clear the form or show success message
+      setFormdata({
+        username: "",
+        password: ""
+      });
+
+      // Navigate to the dashboard or protected page
+      alert('Login successful!');
+      navigate('/dashboard'); // Redirect to dashboard or protected route
+    } catch (error) {
+      console.error("Error occurred:", error);
+      alert("An error occurred, please try again."); // User-friendly error message
+    }
   };
 
   return (
@@ -34,10 +74,10 @@ import { useState } from 'react';
         </div>
 
         {/* Form */}
-        <form className="mt-8 space-y-6 " onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {/* Input fields container */}
           <div className="space-y-4">
-            {/* username_feild*/}
+            {/* username field */}
             <div>
               <label htmlFor="username" className="sr-only">
                 Username
@@ -49,11 +89,11 @@ import { useState } from 'react';
                 <input
                   id="username"
                   name="username"
-                  type="username"
-                  value={formdata.username}
+                  type="text"
+                  value={formdata.username} // Correct reference
                   onChange={handleChange}
                   className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="username"
+                  placeholder="Username"
                 />
               </div>
             </div>
@@ -85,11 +125,13 @@ import { useState } from 'react';
             type="submit"
             className="w-full py-2 px-4 text-white bg-blue-600 hover:bg-blue-700 rounded-md"
           >
-            Sign in
+            Sign In
           </button>
-          <div className='flex  justify-center'>
-              Already have an account? <a href="/signup" className="text-blue-600">Sign Up</a>
-            </div>
+
+          <div className='flex justify-center'>
+            Don't have an account?{" "}
+            <a href="/signup" className="text-blue-600">Sign Up</a>
+          </div>
         </form>
       </div>
     </div>

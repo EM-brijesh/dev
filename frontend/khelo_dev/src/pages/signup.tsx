@@ -1,25 +1,59 @@
-
 import { Lock, MapPin, User } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 export const Signup = () => {
-    const [formdata, setFormdata] = useState({
+    const [formdata, setformdata] = useState({
         username: '',
         password: '',
         location: ''
     });
 
+    const navigate = useNavigate();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormdata((prev: any) => ({
+        setformdata((prev: any) => ({
             ...prev,
             [name]: value
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // Add async here
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         console.log("Form Submitted:", formdata);
+
+        try {
+            const response = await fetch("http://localhost:3000/signup", {
+                method: "POST",  // Request method
+                headers: {
+                    "Content-Type": "application/json",  // Sending data as JSON
+                },
+                body: JSON.stringify(formdata),  // Convert form data to JSON string
+            });
+
+            // Check if the request was successful
+            if (!response.ok) {
+                throw new Error("Error: " + response.statusText);
+            }
+
+            // Handle the response from the API
+            const data = await response.json();
+            console.log("Response from API:", data);
+            alert('User Created Please Signin')
+            navigate('/login')
+
+            // Optionally, you can clear the form or show success message
+            setformdata({
+                username: "",
+                password: "",
+                location: ""
+            });
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
     };
 
     return (
@@ -35,10 +69,10 @@ export const Signup = () => {
                 </div>
 
                 {/* Form */}
-                <form className="mt-8 space-y-6 " onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     {/* Input fields container */}
                     <div className="space-y-4">
-                        {/* username_feild*/}
+                        {/* username_field*/}
                         <div>
                             <label htmlFor="username" className="sr-only">
                                 Username
@@ -50,7 +84,7 @@ export const Signup = () => {
                                 <input
                                     id="username"
                                     name="username"
-                                    type="username"
+                                    type="text" // Fixed type to text
                                     value={formdata.username}
                                     onChange={handleChange}
                                     className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
@@ -79,10 +113,11 @@ export const Signup = () => {
                                 />
                             </div>
                         </div>
-                        {/* location field */}
+
+                        {/* Location field */}
                         <div>
                             <label htmlFor="location" className="sr-only">
-                                location
+                                Location
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
@@ -91,11 +126,11 @@ export const Signup = () => {
                                 <input
                                     id="location"
                                     name="location"
-                                    type="location"
+                                    type="text" // Fixed type to text
                                     value={formdata.location}
                                     onChange={handleChange}
                                     className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="location"
+                                    placeholder="Location"
                                 />
                             </div>
                         </div>
@@ -106,10 +141,13 @@ export const Signup = () => {
                         type="submit"
                         className="w-full py-2 px-4 text-white bg-blue-600 hover:bg-blue-700 rounded-md"
                     >
-                        Sign in
+                        Sign Up
                     </button>
-                    <div className='flex  justify-center'>
-                        Already have an account? <a href="/login" className="text-blue-600">Sign In</a>
+                    <div className="flex justify-center">
+                        Already have an account?{" "}
+                        <a href="/login" className="text-blue-600">
+                            Sign In
+                        </a>
                     </div>
                 </form>
             </div>

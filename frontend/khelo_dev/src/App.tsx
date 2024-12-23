@@ -5,6 +5,8 @@ import { Footer } from './components/Footer';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Auth } from './pages/signin';
 import { Signup } from './pages/signup';
+import Dashboard from './pages/Dashboard';
+
 
 
 function App() {
@@ -26,23 +28,22 @@ function App() {
                   <Card
                     title="Cricket Match"
                     desc="Need 6 Players for the match!"
-                    time="20:00"
+                    date="20:00"
                     location="ISF Turf Kanaika"
-                    count="6"
-                  />
+                    vacant={6} isFull={false} participants={[]}                  />
                   <Card
                     title="FootBall Match"
                     desc="Any team up for FUTSAL?"
-                    time="16:00"
+                    date="16:00"
                     location="Seven Eleven Turf , Mira Road"
-                    count="8"
+                    vacant={6} isFull={false} participants={[]}
                   />
                   <Card
                     title="Volley SESh!"
                     desc="Join Morning Volleyball"
-                    time="7:30"
+                    date="7:30"
                     location="Orange Ground Mira Road"
-                    count="8"
+                    vacant={6} isFull={false} participants={[]}
                   />
                 </div>
               </div>
@@ -54,6 +55,7 @@ function App() {
         />
         <Route path="/login" element={<Auth />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Router>
   )
