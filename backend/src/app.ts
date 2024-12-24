@@ -1,9 +1,10 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import express, { Request, Response, NextFunction, } from 'express';
+import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import { getDistance } from 'geolib';
+import { parse } from 'path';
 
 const JWT_SECRET = 'dasdjkhasfjkf';
 const app = express();
@@ -194,6 +195,117 @@ app.get('/list', authenticateToken, async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching events' });
   }
 });
+
+//@ts-ignore
+app.post('/events/:eventId/join', authenticateToken,  async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  const { count } = req.body;
+  const userId = req.user?.id; // Assuming user ID is extracted from the token middleware
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  if (!count || count <= 0) {
+    return res.status(400).json({ message: 'Invalid participant count' });
+  }
+
+  try {
+    // Fetch the event
+    const event = await prisma.event.findUnique({
+      where: { id: parseInt(eventId) },
+    });
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check if enough capacity is available
+    if (event.capacity < count) {
+      return res.status(400).json({ message: 'Not enough capacity available' });
+    }
+
+    // Check if user is already a participant
+    const existingParticipant = await prisma.participant.findFirst({
+      where: { eventId: parseInt(eventId), userId },
+    });
+
+    if (existingParticipant) {
+      return res.status(400).json({ message: 'User already joined this event' });
+    }
+
+    // Create participant entry
+    await prisma.participant.create({
+      data: {
+        eventId: parseInt(eventId),
+        userId,
+        joinedAt: new Date(),
+      },
+    });
+
+    // Update event capacity
+    await prisma.event.update({
+      where: { id: parseInt(eventId) },
+      data: {
+        capacity: event.capacity - count,
+      },
+    });
+
+    return res.status(200).json({ message: 'Successfully joined the event' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+});
+
+
+//
+//@ts-ignore
+app.get('/events/joined',authenticateToken,  async (req :Request, res): Response => {
+  const userId = req.user?.id; // Extract user ID from the token middleware
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  try {
+    const eventsJoined = await prisma.participant.findMany({
+      where: { userId },
+      include: {
+        event: true, // Include event details
+      },
+    });
+
+    const result = eventsJoined.map(participant => participant.event);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+});
+
+//
+//@ts-ignore
+app.get('/events/created',authenticateToken ,  async (req: Request, res: Response) => {
+  const userId = req.user?.id; // Extract user ID from the token middleware
+
+  if (!userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  try {
+    const eventsCreated = await prisma.event.findMany({
+      where: { creatorId: userId },
+    });
+
+    return res.status(200).json(eventsCreated);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+});
+
 
 // Start server
 const PORT = process.env.PORT || 3000;

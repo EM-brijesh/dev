@@ -177,6 +177,59 @@ app.get('/list', authenticateToken, (req, res) => __awaiter(void 0, void 0, void
         res.status(500).json({ message: 'Error fetching events' });
     }
 }));
+//@ts-ignore
+app.post('/events/:eventId/join', authenticateToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { eventId } = req.params;
+    const { count } = req.body;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id; // Assuming user ID is extracted from the token middleware
+    if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
+    if (!count || count <= 0) {
+        return res.status(400).json({ message: 'Invalid participant count' });
+    }
+    try {
+        // Fetch the event
+        const event = yield prisma.event.findUnique({
+            where: { id: parseInt(eventId) },
+        });
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        // Check if enough capacity is available
+        if (event.capacity < count) {
+            return res.status(400).json({ message: 'Not enough capacity available' });
+        }
+        // Check if user is already a participant
+        const existingParticipant = yield prisma.participant.findFirst({
+            where: { eventId: parseInt(eventId), userId },
+        });
+        if (existingParticipant) {
+            return res.status(400).json({ message: 'User already joined this event' });
+        }
+        // Create participant entry
+        yield prisma.participant.create({
+            data: {
+                eventId: parseInt(eventId),
+                userId,
+                joinedAt: new Date(),
+            },
+        });
+        // Update event capacity
+        yield prisma.event.update({
+            where: { id: parseInt(eventId) },
+            data: {
+                capacity: event.capacity - count,
+            },
+        });
+        return res.status(200).json({ message: 'Successfully joined the event' });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Something went wrong' });
+    }
+}));
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
